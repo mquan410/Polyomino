@@ -1,9 +1,12 @@
 package org.Board;
 
+import java.util.HashMap;
+
 public class Solver {
     private final Board board;
     private boolean complete;
     private final PieceLibrary library;
+    private final HashMap<Integer, String> visitedBoardState;
     // TODO: store multiple solutions
 //    private Set<Map<String, Point>> solutions;
 
@@ -11,6 +14,7 @@ public class Solver {
         this.board = board;
         this.library = library;
         this.complete = false;
+        this.visitedBoardState = new HashMap<>();
 //        this.solutions = new HashSet<>();
     }
 
@@ -19,17 +23,12 @@ public class Solver {
         if (library.getAllPieces().isEmpty()) {
             return false;
         }
-        if (board.isComplete()) {
-            complete = true;
-            board.print();
-            return true;
-        }
+        if (isBoardCompleted()) return true;
         board.print();
-        Trie trie = new Trie();
         String pieceName = library.getAllPieces().iterator().next();
         for (int x = 0; x < board.getWidth(); x++) {
             for (int y = 0; y < board.getHeight(); y++) {
-                if (tryPlacePieceAt(pieceName, x, y, trie)) {
+                if (tryPlacePieceAt(pieceName, x, y, visitedBoardState)) {
                     return true;
                 }
             }
@@ -37,18 +36,33 @@ public class Solver {
         return false;
     }
 
-    private boolean tryPlacePieceAt(String pieceName, int x, int y, Trie trie) {
+    private boolean tryPlacePieceAt(String pieceName, int x, int y, HashMap<Integer, String> visited) {
         Piece piece = library.getPiece(pieceName);
-
-        if (board.placePiece(piece, x, y, pieceName) && !trie.search(pieceName)) {
-            trie.insert(pieceName);
-            library.removePiece(pieceName);
-
+        int boardHashCode = board.getBoardHashCode();
+        if (board.placePiece(piece, x, y, pieceName) && !visited.containsKey(boardHashCode)) {
+            extractUsedPieceFromLibrary(pieceName, visited, boardHashCode);
             if (solve()) {
                 return true;
             }
-            library.addPiece(pieceName, piece);
-            board.removePiece(piece, x, y, pieceName);
+            returnExtractedPieceBack(pieceName, x, y, visited, piece, boardHashCode);
+        }
+        return false;
+    }
+    private void extractUsedPieceFromLibrary(String pieceName, HashMap<Integer, String> visited, int boardHashCode) {
+        visited.put(boardHashCode, pieceName);
+        library.removePiece(pieceName);
+    }
+    private void returnExtractedPieceBack(String pieceName, int x, int y, HashMap<Integer, String> visited, Piece piece, int boardHashCode) {
+        library.addPiece(pieceName, piece);
+        board.removePiece(piece, x, y, pieceName);
+        visited.remove(boardHashCode);
+    }
+
+    private boolean isBoardCompleted() {
+        if (board.isComplete()) {
+            complete = true;
+            board.print();
+            return true;
         }
         return false;
     }
@@ -56,32 +70,4 @@ public class Solver {
     public boolean isSolved() {
         return complete;
     }
-
-    //    public boolean solve() {
-//        if (board.isComplete()){
-//            complete = true;
-//            board.print();
-//            return true;
-//        }
-//        if (library.getAllPieces().isEmpty()) {
-//            return false;
-//        }
-//        bitboardManager.printBoard(boardID);
-//        String pieceName = library.getPieceNames().iterator().next();
-//        Piece piece = library.getPiece(pieceName);
-//
-//        for (int x = 0; x < bitboardManager.getBitboardList().get(boardID).getWidth(); x++) {
-//            for (int y = 0; y < bitboardManager.getBitboardList().get(boardID).getHeight(); y++) {
-//                if (bitboardManager.placePiece(piece,boardID, x, y)) {
-//                    library.removePiece(pieceName);
-//                    if (solve()) {
-//                        return true;
-//                    }
-//                    library.addPiece(pieceName, piece);
-//                    bitboardManager.removePiece(piece, boardID, x, y);
-//                }
-//            }
-//        }
-//        return false;
-//    }
 }

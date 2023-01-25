@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.awt.*;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,16 +81,16 @@ public class Board {
         }
     }
 
-    public Point getPieceOffset(String pieceName) {
-        return pieceOffsets.get(pieceName);
-    }
-
-    public void printBinary() {
-        String formattedBoard = String.format("%" + width * height + "s", data.toString(2)).replace(' ', '0').replaceAll(
-                "(.{" + width + "})", "$1\n");
-        System.out.println(new StringBuilder(formattedBoard).reverse());
-
-    }
+//    public Point getPieceOffset(String pieceName) {
+//        return pieceOffsets.get(pieceName);
+//    }
+//
+//    public void printBinary() {
+//        String formattedBoard = String.format("%" + width * height + "s", data.toString(2)).replace(' ', '0').replaceAll(
+//                "(.{" + width + "})", "$1\n");
+//        System.out.println(new StringBuilder(formattedBoard).reverse());
+//
+//    }
 
     public void print() {
         StringBuilder sb = new StringBuilder();
@@ -106,6 +107,11 @@ public class Board {
     public boolean isComplete() {
         BigInteger completeBoard = BigInteger.ONE.shiftLeft(width * height).subtract(BigInteger.ONE);
         return data.equals(completeBoard);
+    }
+
+    public int getBoardHashCode() {
+        byte[] bytes = data.toByteArray();
+        return Arrays.hashCode(bytes);
     }
 
     public static void main(String[] args) {
